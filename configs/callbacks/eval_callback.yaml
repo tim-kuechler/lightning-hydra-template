@@ -1,0 +1,2 @@
+eval_callback:
+  _target_: src.utils.callbacks.BaseEvalCallback

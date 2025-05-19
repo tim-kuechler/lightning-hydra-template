@@ -1,0 +1,2 @@
+test_callback:
+  _target_: src.utils.callbacks.BaseTestCallback

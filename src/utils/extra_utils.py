@@ -1,3 +1,4 @@
+import warnings
 from pathlib import Path
 from typing import Sequence
 
@@ -9,13 +10,33 @@ from lightning_utilities.core.rank_zero import rank_zero_only
 from omegaconf import DictConfig, OmegaConf, open_dict
 from rich.prompt import Prompt
 
-from src.utils import pylogger
+from src.utils import RankedLogger
 
-log = pylogger.RankedLogger(__name__, rank_zero_only=True)
+log = RankedLogger(__name__, rank_zero_only=True)
+
+
+def apply_extras(cfg: DictConfig) -> None:
+    """Applies optional utilities before the task is started.
+
+    Utilities:
+        - Ignoring python warnings
+        - Rich config printing
+
+    :param cfg: A DictConfig object containing the config tree.
+    """
+    # disable python warnings
+    if cfg.get("ignore_warnings"):
+        log.info("Disabling python warnings! <cfg.ignore_warnings=True>")
+        warnings.filterwarnings("ignore")
+
+    # pretty print config tree using Rich library
+    if cfg.get("print_config"):
+        log.info("Printing config tree with Rich! <cfg.print_config=True>")
+        _print_config_tree(cfg, resolve=True, save_to_file=True)
 
 
 @rank_zero_only
-def print_config_tree(
+def _print_config_tree(
     cfg: DictConfig,
     print_order: Sequence[str] = (
         "data",
@@ -23,8 +44,6 @@ def print_config_tree(
         "callbacks",
         "logger",
         "trainer",
-        "paths",
-        "extras",
     ),
     resolve: bool = False,
     save_to_file: bool = False,
@@ -44,8 +63,12 @@ def print_config_tree(
 
     # add fields from `print_order` to queue
     for field in print_order:
-        queue.append(field) if field in cfg else log.warning(
-            f"Field '{field}' not found in config. Skipping '{field}' config printing..."
+        (
+            queue.append(field)
+            if field in cfg
+            else log.warning(
+                f"Field '{field}' not found in config. Skipping '{field}' config printing..."
+            )
         )
 
     # add all the other fields to queue (not specified in `print_order`)
@@ -70,30 +93,5 @@ def print_config_tree(
 
     # save config tree to file
     if save_to_file:
-        with open(Path(cfg.paths.output_dir, "config_tree.log"), "w") as file:
+        with open(Path(cfg.output_dir, "config_tree.log"), "w") as file:
             rich.print(tree, file=file)
-
-
-@rank_zero_only
-def enforce_tags(cfg: DictConfig, save_to_file: bool = False) -> None:
-    """Prompts user to input tags from command line if no tags are provided in config.
-
-    :param cfg: A DictConfig composed by Hydra.
-    :param save_to_file: Whether to export tags to the hydra output folder. Default is ``False``.
-    """
-    if not cfg.get("tags"):
-        if "id" in HydraConfig().cfg.hydra.job:
-            raise ValueError("Specify tags before launching a multirun!")
-
-        log.warning("No tags provided in config. Prompting user to input tags...")
-        tags = Prompt.ask("Enter a list of comma separated tags", default="dev")
-        tags = [t.strip() for t in tags.split(",") if t != ""]
-
-        with open_dict(cfg):
-            cfg.tags = tags
-
-        log.info(f"Tags: {cfg.tags}")
-
-    if save_to_file:
-        with open(Path(cfg.paths.output_dir, "tags.log"), "w") as file:
-            rich.print(cfg.tags, file=file)

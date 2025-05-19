@@ -5,13 +5,13 @@ from lightning import Callback
 from lightning.pytorch.loggers import Logger
 from omegaconf import DictConfig
 
-from src.utils import pylogger
+from dmt.utils import RankedLogger
 
-log = pylogger.RankedLogger(__name__, rank_zero_only=True)
+log = RankedLogger(__name__, rank_zero_only=True)
 
 
 def instantiate_callbacks(callbacks_cfg: DictConfig) -> List[Callback]:
-    """Instantiates callbacks from config.
+    """Instantiates pytorch lightning callbacks from config.
 
     :param callbacks_cfg: A DictConfig object containing callback configurations.
     :return: A list of instantiated callbacks.

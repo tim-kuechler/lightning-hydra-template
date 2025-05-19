@@ -1,25 +1,18 @@
-[tool.pytest.ini_options]
-addopts = [
-  "--color=yes",
-  "--durations=0",
-  "--strict-markers",
-  "--doctest-modules",
-]
-filterwarnings = [
-  "ignore::DeprecationWarning",
-  "ignore::UserWarning",
-]
-log_cli = "True"
-markers = [
-  "slow: slow tests",
-]
-minversion = "6.0"
-testpaths = "tests/"
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
 
-[tool.coverage.report]
-exclude_lines = [
-    "pragma: nocover",
-    "raise NotImplementedError",
-    "raise NotImplementedError()",
-    "if __name__ == .__main__.:",
+[project]
+name = "Lightning-Hydra-Template"
+version = "1.0"
+description = ""
+authors = [
+    { name = "Tim Küchler", email = "tim.kuechler@iwr.uni-heidelberg.de" }
 ]
+readme = ""
+license = { text = "" }
+requires-python = ">=3.11"
+urls = { Homepage = "" }
+
+[tool.setuptools.packages.find]
+where = ["."]

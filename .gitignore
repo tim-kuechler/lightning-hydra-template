@@ -152,3 +152,8 @@ configs/local/default.yaml
 
 # Aim logging
 .aim
+
+
+# Project
+MaMoE.egg-info
+DM_Training.egg-info
